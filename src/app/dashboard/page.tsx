@@ -1,11 +1,6 @@
 "use client";
 
-import { auth, db } from "@/lib/firebase";
-import { collection, addDoc, doc, setDoc, getDocs } from 'firebase/firestore';
-import * as z from 'zod'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
@@ -14,9 +9,14 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import React, { useState, useEffect } from 'react'
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { auth, db } from "@/lib/firebase";
+import { zodResolver } from '@hookform/resolvers/zod';
+import { addDoc, collection, getDocs } from 'firebase/firestore';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import * as z from 'zod';
 
 const purposeFormSchema = z.object({
   name: z.string().min(1, {
@@ -26,6 +26,7 @@ const purposeFormSchema = z.object({
   }),
 })
 
+// TODO: clicking a purpose should take you to the purpose page
 export default function Dashboard() {
   const [purposes, setPurposes] = useState<any>([]);
   const [loading, setLoading] = useState(true);
