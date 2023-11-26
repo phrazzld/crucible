@@ -1,10 +1,11 @@
 "use client";
 
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from 'firebase/firestore';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import { useState } from "react";
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,17 @@ export default function Signup() {
   const handleSignup = async (e: any) => {
     e.preventDefault();
     try {
+      console.log("signing up, auth.currentUser:", auth.currentUser)
       await createUserWithEmailAndPassword(auth, email, password);
+      console.log("auth user created, auth.currentUser:", auth.currentUser)
+
+      if (!auth.currentUser) {
+        throw new Error("User not found");
+      }
+
+      await setDoc(doc(db, "users", auth.currentUser.uid), {
+        email: auth.currentUser.email,
+      });
       router.push("/dashboard");
     } catch (error: any) {
       setErrorMessage(error.message);

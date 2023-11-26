@@ -1,6 +1,7 @@
-import './globals.css'
+import { SignOutButton } from '@/app/SignOutButton';
+import { Inter } from 'next/font/google';
 import Link from "next/link";
-import { Inter } from 'next/font/google'
+import './globals.css';
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -31,6 +32,7 @@ export default function RootLayout({
                 Crucible
               </p>
             </Link>
+            <SignOutButton />
           </div>
         </header>
         <main className="container mx-auto mt-8">{children}</main>
