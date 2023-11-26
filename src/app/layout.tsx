@@ -26,7 +26,7 @@ export default function RootLayout({
         <AuthContextProvider>
           <header className="w-full py-4 px-8 bg-white shadow-md">
             <div className="container mx-auto flex justify-between items-center">
-              <Link href="/">
+              <Link href="/dashboard">
                 <p className="text-2xl font-semibold text-red-800">
                   Crucible
                 </p>
