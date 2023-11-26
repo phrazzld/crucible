@@ -21,7 +21,7 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.ico" />
       </head>
       <body
-        className={`min-h-screen bg-gradient-to-br from-red-800 to-indigo-800 ${inter.className}`}
+        className={`min-h-screen ${inter.className}`}
       >
         <AuthContextProvider>
           <header className="w-full py-4 px-8 bg-white shadow-md">

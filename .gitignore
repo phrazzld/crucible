@@ -36,3 +36,5 @@ next-env.d.ts
 
 .vscode
 .tool-versions
+
+service-account-key.json

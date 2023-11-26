@@ -19,14 +19,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from '@/components/ui/textarea';
+import { CONFIG_NAMES } from '@/constants';
 import { useAuthContext } from "@/context/AuthContext";
-import { auth, db } from "@/lib/firebase";
+import { auth, db, functions } from "@/lib/firebase";
 import { zodResolver } from '@hookform/resolvers/zod';
-import { deleteDoc, addDoc, collection, doc, getDoc, getDocs } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDoc, getDocs } from 'firebase/firestore';
 import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
+import { httpsCallable } from "firebase/functions";
 
 const configFormSchema = z.object({
   model: z.enum(['gpt-3.5-turbo', 'gpt-4', 'gpt-4-1106-preview', 'gpt-4-32k', 'gpt-3.5-turbo-1106', 'gpt-3.5-turbo-16k']),
@@ -143,17 +145,16 @@ export default function Purpose() {
     const configsRef = collection(db, "users", user.uid, "purposes", params.get("id") || "", "configs")
 
     // make list of cool default config names, e.g. alpha, beta, gamma, etc
-    const defaultConfigNames = ['alpha', 'beta', 'gamma', 'delta', 'epsilon', 'zeta', 'eta', 'theta', 'iota', 'kappa']
     const existingConfigNames = configs.map((config: any) => config.name);
     // select first default config name that isn't already taken
-    const defaultConfigName = defaultConfigNames.find((name: string) => !existingConfigNames.includes(name))
-    if (!defaultConfigName) {
+    const configName = CONFIG_NAMES.find((name: string) => !existingConfigNames.includes(name))
+    if (!configName) {
       console.error('No default config name found')
       return
     }
 
     addDoc(configsRef, {
-      name: defaultConfigName,
+      name: configName,
       model: values.model,
       temperature: Number(values.temperature),
       maxTokens: Number(values.maxTokens),
@@ -170,6 +171,22 @@ export default function Purpose() {
     })
   }
 
+  // TODO: show test runs
+  const handleRunTest = async () => {
+    console.log('runTest')
+    // make one openai request for each config
+    // save the results to the db under users/:id/purposes/:id/tests
+    const body = JSON.stringify({
+      purposeId: params.get("id"),
+      configs
+    })
+    console.log('body', body)
+
+    // TODO: hit actual cloud function
+    const callMeMaybe = httpsCallable(functions, 'callMeMaybe');
+    const result = await callMeMaybe({ purposeId: params.get("id"), configs });
+    console.log('result', result)
+  }
 
   if (loading) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
@@ -177,8 +194,10 @@ export default function Purpose() {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold"
-      >{purpose.name}</h1>
+      <div className="container mx-auto px-4 py-16 max-w-2xl flex flex-row justify-between items-center">
+        <h1 className="text-4xl font-bold">{purpose.name}</h1>
+        <Button onClick={handleRunTest}>Run Test</Button>
+      </div>
 
       <div className="container mx-auto px-4 py-16 max-w-2xl">
         <h2 className="text-2xl font-bold">Configs</h2>
