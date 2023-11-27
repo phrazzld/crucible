@@ -171,21 +171,39 @@ export default function Purpose() {
     })
   }
 
-  // TODO: show test runs
-  const handleRunTest = async () => {
-    console.log('runTest')
-    // make one openai request for each config
-    // save the results to the db under users/:id/purposes/:id/tests
-    const body = JSON.stringify({
-      purposeId: params.get("id"),
-      configs
-    })
-    console.log('body', body)
+  // TODO: show trial runs
+  const handleRunTrial = async () => {
+    if (!auth.currentUser) {
+      console.error('No user found')
+      return
+    }
 
-    // TODO: hit actual cloud function
-    const callMeMaybe = httpsCallable(functions, 'callMeMaybe');
-    const result = await callMeMaybe({ purposeId: params.get("id"), configs });
-    console.log('result', result)
+    const purposeId = params.get("id")
+    if (!purposeId) {
+      console.error('No purpose found')
+      return
+    }
+
+    const trialsRef = collection(db, "users", auth.currentUser?.uid, "purposes", purposeId, "trials")
+
+    const trialDoc = await addDoc(trialsRef, {
+      configIds: configs.map((config: any) => config.id),
+      createdAt: new Date(),
+    })
+    const trialRef = doc(db, "users", auth.currentUser?.uid, "purposes", purposeId, "trials", trialDoc.id)
+
+    const runConfigTrial = httpsCallable(functions, 'runConfigTrial');
+    for (const config of configs) {
+      console.log("running trial for config:", config)
+      const { data } = await runConfigTrial({ config })
+      console.log('result data', data)
+      await addDoc(collection(trialRef, "results"), {
+        configId: config.id,
+        createdAt: new Date(),
+        result: data
+      })
+      console.log("trial result saved")
+    }
   }
 
   if (loading) return <div>Loading...</div>;
@@ -196,7 +214,7 @@ export default function Purpose() {
     <div>
       <div className="container mx-auto px-4 py-16 max-w-2xl flex flex-row justify-between items-center">
         <h1 className="text-4xl font-bold">{purpose.name}</h1>
-        <Button onClick={handleRunTest}>Run Test</Button>
+        <Button onClick={handleRunTrial}>Run Test</Button>
       </div>
 
       <div className="container mx-auto px-4 py-16 max-w-2xl">
